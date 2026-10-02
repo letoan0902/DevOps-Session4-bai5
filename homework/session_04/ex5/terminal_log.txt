@@ -1,0 +1,452 @@
+TERMINAL LOG - BAI 5 - RESET VA REVERT (Session 04)
+Moi lenh duoi day da duoc chay that bang Git Bash tren Windows 11; output chep nguyen van.
+Repo thu nghiem: /d/Rikkei/DevOps/Session4/_demo/bai5/reset-revert-demo
+
+$ git --version
+git version 2.49.0.windows.1
+
+$ python --version
+Python 3.13.3
+
+$ date
+Fri Oct  2 12:48:58 SEAST 2026
+
+==================================================
+BUOC 1: KHOI TAO REPO VA 2 COMMIT DAU
+==================================================
+
+$ pwd
+/d/Rikkei/DevOps/Session4/_demo/bai5/reset-revert-demo
+
+$ git init -b main
+Initialized empty Git repository in D:/Rikkei/DevOps/Session4/_demo/bai5/reset-revert-demo/.git/
+
+$ git config user.name "Lê Toàn"
+
+$ git config user.email "trinhhanh261293@gmail.com"
+
+$ git config core.autocrlf false
+
+$ git config --local --list | grep -E "^(user|core.autocrlf)"
+core.autocrlf=false
+user.name=Lê Toàn
+user.email=trinhhanh261293@gmail.com
+
+$ printf 'def add(a, b):\n    return a + b\n\n\ndef subtract(a, b):\n    return a - b\n' > calculator.py
+
+$ cat calculator.py
+def add(a, b):
+    return a + b
+
+
+def subtract(a, b):
+    return a - b
+
+$ git add calculator.py
+
+$ git commit -m "feat: them ham add va subtract"
+[main (root-commit) 4b8df38] feat: them ham add va subtract
+ 1 file changed, 6 insertions(+)
+ create mode 100644 calculator.py
+
+$ printf '\n\ndef multiply(a, b):\n    return a * b\n' >> calculator.py
+
+$ git add calculator.py
+
+$ git commit -m "feat: them ham multiply"
+[main 5cc69d1] feat: them ham multiply
+ 1 file changed, 4 insertions(+)
+
+$ python -c "import calculator as c; print(\"add(6, 3) =\", c.add(6, 3)); print(\"subtract(6, 3) =\", c.subtract(6, 3)); print(\"multiply(6, 3) =\", c.multiply(6, 3))"
+add(6, 3) = 9
+subtract(6, 3) = 3
+multiply(6, 3) = 18
+
+$ git log --oneline -n 5
+5cc69d1 feat: them ham multiply
+4b8df38 feat: them ham add va subtract
+
+==================================================
+TRUONG HOP 1: GIT RESET --MIXED HEAD~1
+==================================================
+
+$ printf '\n\ndef divide(a, b):\n    return a * b\n' >> calculator.py
+
+$ git add calculator.py
+
+$ git commit -m "feat: them ham divide"
+[main e717cb8] feat: them ham divide
+ 1 file changed, 4 insertions(+)
+
+$ python -c "import calculator as c; print(\"divide(6, 3) =\", c.divide(6, 3), \"(sai, ky vong 2.0)\")"
+divide(6, 3) = 18 (sai, ky vong 2.0)
+
+$ git log --oneline -n 5
+e717cb8 feat: them ham divide
+5cc69d1 feat: them ham multiply
+4b8df38 feat: them ham add va subtract
+
+$ git reset --mixed HEAD~1
+Unstaged changes after reset:
+M	calculator.py
+
+$ git log --oneline -n 5
+5cc69d1 feat: them ham multiply
+4b8df38 feat: them ham add va subtract
+
+$ git status
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   calculator.py
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+$ git diff
+diff --git a/calculator.py b/calculator.py
+index 3292da0..7c61a57 100644
+--- a/calculator.py
++++ b/calculator.py
+@@ -8,3 +8,7 @@ def subtract(a, b):
+ 
+ def multiply(a, b):
+     return a * b
++
++
++def divide(a, b):
++    return a * b
+
+$ git reflog -n 4
+5cc69d1 HEAD@{0}: reset: moving to HEAD~1
+e717cb8 HEAD@{1}: commit: feat: them ham divide
+5cc69d1 HEAD@{2}: commit: feat: them ham multiply
+4b8df38 HEAD@{3}: commit (initial): feat: them ham add va subtract
+
+$ git show HEAD:calculator.py > calculator.py
+
+$ printf '\n\ndef divide(a, b):\n    if b == 0:\n        raise ValueError("Khong the chia cho 0")\n    return a / b\n' >> calculator.py
+
+$ git diff
+diff --git a/calculator.py b/calculator.py
+index 3292da0..4e9244b 100644
+--- a/calculator.py
++++ b/calculator.py
+@@ -8,3 +8,9 @@ def subtract(a, b):
+ 
+ def multiply(a, b):
+     return a * b
++
++
++def divide(a, b):
++    if b == 0:
++        raise ValueError("Khong the chia cho 0")
++    return a / b
+
+$ git add calculator.py
+
+$ git commit -m "feat: them ham divide co kiem tra chia cho 0"
+[main 8631d56] feat: them ham divide co kiem tra chia cho 0
+ 1 file changed, 6 insertions(+)
+
+$ python -c "import calculator as c; print(\"divide(6, 3) =\", c.divide(6, 3))"
+divide(6, 3) = 2.0
+
+$ git log --oneline -n 5
+8631d56 feat: them ham divide co kiem tra chia cho 0
+5cc69d1 feat: them ham multiply
+4b8df38 feat: them ham add va subtract
+
+$ git status
+On branch main
+nothing to commit, working tree clean
+
+==================================================
+TRUONG HOP 2: GIT REVERT --NO-EDIT
+==================================================
+
+$ sed -i 's/return a \* b/return a + b/' calculator.py
+
+$ git diff
+diff --git a/calculator.py b/calculator.py
+index 4e9244b..c6f651b 100644
+--- a/calculator.py
++++ b/calculator.py
+@@ -7,7 +7,7 @@ def subtract(a, b):
+ 
+ 
+ def multiply(a, b):
+-    return a * b
++    return a + b
+ 
+ 
+ def divide(a, b):
+
+$ git add calculator.py
+
+$ git commit -m "feat: doi cong thuc multiply"
+[main 3c27d09] feat: doi cong thuc multiply
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ python -c "import calculator as c; print(\"multiply(6, 3) =\", c.multiply(6, 3), \"(sai, ky vong 18)\")"
+multiply(6, 3) = 9 (sai, ky vong 18)
+
+$ printf '# Reset Revert Demo\n\nMa nguon may tinh don gian: add, subtract, multiply, divide.\n' > README.md
+
+$ cat README.md
+# Reset Revert Demo
+
+Ma nguon may tinh don gian: add, subtract, multiply, divide.
+
+$ git add README.md
+
+$ git commit -m "docs: them README"
+[main 00841ae] docs: them README
+ 1 file changed, 3 insertions(+)
+ create mode 100644 README.md
+
+$ git log --oneline -n 5
+00841ae docs: them README
+3c27d09 feat: doi cong thuc multiply
+8631d56 feat: them ham divide co kiem tra chia cho 0
+5cc69d1 feat: them ham multiply
+4b8df38 feat: them ham add va subtract
+
+$ git revert 3c27d09 --no-edit
+[main a93b9ee] Revert "feat: doi cong thuc multiply"
+ Date: Fri Oct 2 12:48:45 2026 +0700
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git log --oneline -n 5
+a93b9ee Revert "feat: doi cong thuc multiply"
+00841ae docs: them README
+3c27d09 feat: doi cong thuc multiply
+8631d56 feat: them ham divide co kiem tra chia cho 0
+5cc69d1 feat: them ham multiply
+
+$ git show --stat HEAD
+commit a93b9eedffda9c0f6dec4f05043a5ca3ca1c7609
+Author: Lê Toàn <trinhhanh261293@gmail.com>
+Date:   Fri Oct 2 12:48:45 2026 +0700
+
+    Revert "feat: doi cong thuc multiply"
+    
+    This reverts commit 3c27d09a1b2cb215d35cad567f856565a5d88202.
+
+ calculator.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git show HEAD
+commit a93b9eedffda9c0f6dec4f05043a5ca3ca1c7609
+Author: Lê Toàn <trinhhanh261293@gmail.com>
+Date:   Fri Oct 2 12:48:45 2026 +0700
+
+    Revert "feat: doi cong thuc multiply"
+    
+    This reverts commit 3c27d09a1b2cb215d35cad567f856565a5d88202.
+
+diff --git a/calculator.py b/calculator.py
+index c6f651b..4e9244b 100644
+--- a/calculator.py
++++ b/calculator.py
+@@ -7,7 +7,7 @@ def subtract(a, b):
+ 
+ 
+ def multiply(a, b):
+-    return a + b
++    return a * b
+ 
+ 
+ def divide(a, b):
+
+$ git log -n 1
+commit a93b9eedffda9c0f6dec4f05043a5ca3ca1c7609
+Author: Lê Toàn <trinhhanh261293@gmail.com>
+Date:   Fri Oct 2 12:48:45 2026 +0700
+
+    Revert "feat: doi cong thuc multiply"
+    
+    This reverts commit 3c27d09a1b2cb215d35cad567f856565a5d88202.
+
+$ git status
+On branch main
+nothing to commit, working tree clean
+
+$ python -c "import calculator as c; print(\"multiply(6, 3) =\", c.multiply(6, 3), \"(dung tro lai)\")"
+multiply(6, 3) = 18 (dung tro lai)
+
+$ git log --oneline --graph --decorate -n 8
+* a93b9ee (HEAD -> main) Revert "feat: doi cong thuc multiply"
+* 00841ae docs: them README
+* 3c27d09 feat: doi cong thuc multiply
+* 8631d56 feat: them ham divide co kiem tra chia cho 0
+* 5cc69d1 feat: them ham multiply
+* 4b8df38 feat: them ham add va subtract
+
+$ git cat-file -p HEAD
+tree 7302817cb615bb0329184881ca599e653e0f6f3a
+parent 00841aeaf6615cf783d3b970a96204d4342f4376
+author Lê Toàn <trinhhanh261293@gmail.com> 1790920125 +0700
+committer Lê Toàn <trinhhanh261293@gmail.com> 1790920125 +0700
+
+Revert "feat: doi cong thuc multiply"
+
+This reverts commit 3c27d09a1b2cb215d35cad567f856565a5d88202.
+
+==================================================
+BO SUNG: GIT RESET --SOFT TREN NHANH DEMO-SOFT
+==================================================
+
+$ git switch -c demo-soft
+Switched to a new branch 'demo-soft'
+
+$ printf '\n\ndef power(a, b):\n    return a ** b\n' >> calculator.py
+
+$ git add calculator.py
+
+$ git commit -m "feat: them ham power"
+[demo-soft 43c3ca4] feat: them ham power
+ 1 file changed, 4 insertions(+)
+
+$ git log --oneline -n 3
+43c3ca4 feat: them ham power
+a93b9ee Revert "feat: doi cong thuc multiply"
+00841ae docs: them README
+
+$ git reset --soft HEAD~1
+
+$ git log --oneline -n 3
+a93b9ee Revert "feat: doi cong thuc multiply"
+00841ae docs: them README
+3c27d09 feat: doi cong thuc multiply
+
+$ git status
+On branch demo-soft
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   calculator.py
+
+
+$ git diff --staged
+diff --git a/calculator.py b/calculator.py
+index 4e9244b..47a5ff5 100644
+--- a/calculator.py
++++ b/calculator.py
+@@ -14,3 +14,7 @@ def divide(a, b):
+     if b == 0:
+         raise ValueError("Khong the chia cho 0")
+     return a / b
++
++
++def power(a, b):
++    return a ** b
+
+$ git commit -m "feat: them ham power (commit lai sau soft reset)"
+[demo-soft 558b9b5] feat: them ham power (commit lai sau soft reset)
+ 1 file changed, 4 insertions(+)
+
+$ git log --oneline -n 3
+558b9b5 feat: them ham power (commit lai sau soft reset)
+a93b9ee Revert "feat: doi cong thuc multiply"
+00841ae docs: them README
+
+$ git switch main
+Switched to branch 'main'
+
+$ git log --oneline -n 6
+a93b9ee Revert "feat: doi cong thuc multiply"
+00841ae docs: them README
+3c27d09 feat: doi cong thuc multiply
+8631d56 feat: them ham divide co kiem tra chia cho 0
+5cc69d1 feat: them ham multiply
+4b8df38 feat: them ham add va subtract
+
+$ git status
+On branch main
+nothing to commit, working tree clean
+
+$ git branch -v
+  demo-soft 558b9b5 feat: them ham power (commit lai sau soft reset)
+* main      a93b9ee Revert "feat: doi cong thuc multiply"
+
+==================================================
+CUU HO: RESET NHAM VA PHUC HOI BANG REFLOG (tren demo-soft)
+==================================================
+
+$ git switch demo-soft
+Switched to branch 'demo-soft'
+
+$ git reset --mixed HEAD~1
+Unstaged changes after reset:
+M	calculator.py
+
+$ git log --oneline -n 3
+a93b9ee Revert "feat: doi cong thuc multiply"
+00841ae docs: them README
+3c27d09 feat: doi cong thuc multiply
+
+$ git reflog -n 5
+a93b9ee HEAD@{0}: reset: moving to HEAD~1
+558b9b5 HEAD@{1}: checkout: moving from main to demo-soft
+a93b9ee HEAD@{2}: checkout: moving from demo-soft to main
+558b9b5 HEAD@{3}: commit: feat: them ham power (commit lai sau soft reset)
+a93b9ee HEAD@{4}: reset: moving to HEAD~1
+
+$ git reset --mixed HEAD@{1}
+
+$ git log --oneline -n 3
+558b9b5 feat: them ham power (commit lai sau soft reset)
+a93b9ee Revert "feat: doi cong thuc multiply"
+00841ae docs: them README
+
+$ git status
+On branch demo-soft
+nothing to commit, working tree clean
+
+$ git switch main
+Switched to branch 'main'
+
+$ git status
+On branch main
+nothing to commit, working tree clean
+
+$ git log --oneline -n 6
+a93b9ee Revert "feat: doi cong thuc multiply"
+00841ae docs: them README
+3c27d09 feat: doi cong thuc multiply
+8631d56 feat: them ham divide co kiem tra chia cho 0
+5cc69d1 feat: them ham multiply
+4b8df38 feat: them ham add va subtract
+
+$ git reflog -n 12
+a93b9ee HEAD@{0}: checkout: moving from demo-soft to main
+558b9b5 HEAD@{1}: reset: moving to HEAD@{1}
+a93b9ee HEAD@{2}: reset: moving to HEAD~1
+558b9b5 HEAD@{3}: checkout: moving from main to demo-soft
+a93b9ee HEAD@{4}: checkout: moving from demo-soft to main
+558b9b5 HEAD@{5}: commit: feat: them ham power (commit lai sau soft reset)
+a93b9ee HEAD@{6}: reset: moving to HEAD~1
+43c3ca4 HEAD@{7}: commit: feat: them ham power
+a93b9ee HEAD@{8}: checkout: moving from main to demo-soft
+a93b9ee HEAD@{9}: revert: Revert "feat: doi cong thuc multiply"
+00841ae HEAD@{10}: commit: docs: them README
+3c27d09 HEAD@{11}: commit: feat: doi cong thuc multiply
+
+$ cat calculator.py
+def add(a, b):
+    return a + b
+
+
+def subtract(a, b):
+    return a - b
+
+
+def multiply(a, b):
+    return a * b
+
+
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Khong the chia cho 0")
+    return a / b
+
